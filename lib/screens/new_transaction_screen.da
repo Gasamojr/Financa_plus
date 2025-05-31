@@ -1,0 +1,107 @@
+import 'package:flutter/material.dart';
+
+class NewTransactionScreen extends StatefulWidget {
+  const NewTransactionScreen({super.key});
+
+  @override
+  State<NewTransactionScreen> createState() => _NewTransactionScreenState();
+}
+
+class _NewTransactionScreenState extends State<NewTransactionScreen> {
+  final _formKey = GlobalKey<FormState>();
+  String _description = '';
+  double _value = 0;
+  String _type = 'Receita';
+  DateTime _selectedDate = DateTime.now();
+
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      // Aqui você pode enviar os dados para o Firestore futuramente
+      print('Descrição: $_description');
+      print('Valor: $_value');
+      print('Tipo: $_type');
+      print('Data: $_selectedDate');
+
+      Navigator.pop(context); // Volta para a tela anterior
+    }
+  }
+
+  Future<void> _pickDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Nova Transação'),
+        backgroundColor: Colors.green[800],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Descrição'),
+                onSaved: (value) => _description = value!,
+                validator: (value) => value!.isEmpty ? 'Digite uma descrição' : null,
+              ),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Valor (R\$)'),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                onSaved: (value) => _value = double.tryParse(value!) ?? 0,
+                validator: (value) => value!.isEmpty ? 'Digite um valor' : null,
+              ),
+              DropdownButtonFormField<String>(
+                value: _type,
+                decoration: const InputDecoration(labelText: 'Tipo'),
+                items: ['Receita', 'Despesa'].map((tipo) {
+                  return DropdownMenuItem(
+                    value: tipo,
+                    child: Text(tipo),
+                  );
+                }).toList(),
+                onChanged: (value) => setState(() => _type = value!),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text('Data: ${_selectedDate.toLocal().toString().split(' ')[0]}'),
+                  const SizedBox(width: 20),
+                  ElevatedButton(
+                    onPressed: _pickDate,
+                    child: const Text('Selecionar Data'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: _submitForm,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[800],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text('Salvar Transação'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
